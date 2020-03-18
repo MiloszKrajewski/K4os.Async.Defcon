@@ -9,6 +9,7 @@ nuget Microsoft.Extensions.Logging.Abstractions
 
 nuget System.Reactive
 nuget System.Interactive
+nuget Castle.Core
 
 nuget Microsoft.NET.Test.Sdk
 nuget xunit

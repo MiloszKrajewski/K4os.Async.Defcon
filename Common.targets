@@ -6,19 +6,10 @@
   </PropertyGroup>
   <PropertyGroup>
     <Product>K4os.Async.Defcon</Product>
-    <Authors>...</Authors>
-    <Copyright>...</Copyright>
-    <Description>...</Description>
-    <RepositoryUrl>https://.../K4os.Async.Defcon</RepositoryUrl>
-  </PropertyGroup>
-  <PropertyGroup>
-    <!--
-    <PackageId>K4os.Async.Defcon</PackageId>
-    <PackageTags>...</PackageTags>
-    <PackageLicenseUrl>https://.../LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://.../K4os.Async.Defcon</PackageProjectUrl>
-    <PackageIconUrl>https://.../K4os.Async.Defcon/icon.png</PackageIconUrl>
-    -->
+    <Authors>Milosz Krajewski</Authors>
+    <Copyright>Milosz Krajewski</Copyright>
+    <Description>Proxy generator for objects with asynchronous constrcutor</Description>
+    <RepositoryUrl>https://github.com/MiloszKrajewski/K4os.Async.Defcon</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="*.?sproj.DotSettings" />
