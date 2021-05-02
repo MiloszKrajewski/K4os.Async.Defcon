@@ -6,27 +6,21 @@ namespace K4os.Async.Defcon.Internal
 {
 	internal static class ObjectExtensions
 	{
-		// ReSharper disable once HeapView.BoxingAllocation
-		internal static bool IsNull<T>(this T value) => ReferenceEquals(value, null);
+		internal static bool IsNull<T>(this T value) => value is null;
 
-		/// <summary>
-		/// Gets the friendly name of given type.
-		/// </summary>
+		/// <summary>Gets the friendly name of given type.</summary>
 		/// <param name="type">The type.</param>
 		/// <returns>Friendly name.</returns>
 		public static string GetFriendlyName(this Type type) =>
 			GetFriendlyName(type, false);
 
-		/// <summary>
-		/// Gets the friendly name of given type.
-		/// </summary>
+		/// <summary>Gets the friendly name of given type.</summary>
 		/// <param name="type">The type.</param>
 		/// <param name="withNamespace">includes namespace (not on generic arguments).</param>
 		/// <returns>Friendly name.</returns>
 		public static string GetFriendlyName(this Type type, bool withNamespace)
 		{
-			if (type == null)
-				return "<null>";
+			if (type is null) return "<null>";
 
 			var typeName = (withNamespace ? type.FullName : type.Name) ?? "Unknown";
 			if (!type.GetTypeInfo().IsGenericType)
@@ -40,5 +34,11 @@ namespace K4os.Async.Defcon.Internal
 
 			return $"{typeName.Substring(0, length)}<{genericTypes}>";
 		}
+
+		public static Exception Unwrap(this Exception e) =>
+			e switch { AggregateException a => Unwrap(a), _ => e };
+
+		private static Exception Unwrap(AggregateException e) =>
+			e.InnerExceptions switch { { Count: 1 } l => Unwrap(l[0]), _ => e };
 	}
 }

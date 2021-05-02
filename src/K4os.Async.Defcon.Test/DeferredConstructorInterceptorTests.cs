@@ -84,6 +84,13 @@ namespace K4os.Async.Defcon.Test
 			Assert.Contains("created", _events);
 			Assert.Contains("void", _events);
 		}
+		
+		[Theory, InlineData(true), InlineData(false)]
+		public async Task ExceptionThrownIsNotWrappedInAggregateException(bool instant)
+		{
+			await Assert.ThrowsAsync<ArgumentException>(
+				() => _decorator.ErrorAsync(instant));
+		}
 	}
 
 	public interface ISomeMethods
@@ -93,6 +100,7 @@ namespace K4os.Async.Defcon.Test
 		Task<T> ReturnAsync<T>(T value);
 		void NoResult();
 		Task NoResultAsync();
+		Task ErrorAsync(bool instant);
 	}
 
 	public class SomeMethods: ISomeMethods
@@ -141,6 +149,12 @@ namespace K4os.Async.Defcon.Test
 		{
 			await Dummy();
 			Log("void");
+		}
+
+		public async Task ErrorAsync(bool instant)
+		{
+			if (!instant) await Task.Yield();
+			throw new ArgumentException("Exception has been thrown");
 		}
 	}
 }

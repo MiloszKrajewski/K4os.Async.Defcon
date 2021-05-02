@@ -43,12 +43,13 @@ namespace K4os.Async.Defcon
 		/// <param name="invocation">Intercepted invocation.</param>
 		public void Intercept(IInvocation invocation)
 		{
-			var returnType = invocation.Method.ReturnType;
-			invocation.ReturnValue =
-				IsTaskOfT(returnType) ? ToTaskOfT(returnType, InterceptAsyncResult(invocation)) :
-				IsJustTask(returnType) ? InterceptAsyncVoid(invocation) :
-				WaitAndIntercept(invocation);
+			invocation.ReturnValue = InterceptAny(invocation, invocation.Method.ReturnType);
 		}
+		
+		private object InterceptAny(IInvocation invocation, Type returnType) =>
+			IsTaskOfT(returnType) ? ToTaskOfT(returnType, InterceptAsyncResult(invocation)) :
+			IsJustTask(returnType) ? InterceptAsyncVoid(invocation) :
+			WaitAndIntercept(invocation);
 
 		private static Task ToTaskOfT(Type returnType, Task task)
 		{
@@ -58,7 +59,7 @@ namespace K4os.Async.Defcon
 			// dynamically (using reflection) create right Task<T>
 			// DynamicPromise helps a little bit with that
 			// (it's not magic, just hides some ugliness)
-			var innerType = returnType.GetGenericArguments()[0];
+			var innerType = DynamicPromise.InnerTypeOf(returnType);
 			var promise = DynamicPromise.Create(innerType);
 			promise.ConnectTo(task); // Task<object> -> Task<T>
 
@@ -66,29 +67,22 @@ namespace K4os.Async.Defcon
 			return promise.Task;
 		}
 
-		private object WaitAndIntercept(IInvocation invocation)
-		{
-			// blocking
-			var target = _target.Value.GetAwaiter().GetResult();
-			return invocation.Method.Invoke(target, invocation.Arguments);
-		}
+		private object WaitAndIntercept(IInvocation invocation) =>
+			ExecuteInvocation(Await(_target.Value), invocation);
 
-		private async Task InterceptAsyncVoid(IInvocation invocation)
-		{
-			// non blocking
-			var target = await _target.Value;
-			var result = (Task) invocation.Method.Invoke(target, invocation.Arguments);
-			// implicit (void) return
-			await result;
-		}
+		private async Task InterceptAsyncVoid(IInvocation invocation) => 
+			await ExecuteInvocationAsync(await _target.Value, invocation);
 
-		private async Task<object> InterceptAsyncResult(IInvocation invocation)
-		{
-			// non blocking
-			var target = await _target.Value;
-			var result = (Task) invocation.Method.Invoke(target, invocation.Arguments);
-			return await result.AsObject();
-		}
+		private async Task<object> InterceptAsyncResult(IInvocation invocation) =>
+			await ExecuteInvocationAsync(await _target.Value, invocation).AsObject();
+
+		private static T Await(Task<T> target) => target.GetAwaiter().GetResult();
+
+		private static object ExecuteInvocation(T target, IInvocation invocation) => 
+			invocation.Method.Invoke(target, invocation.Arguments);
+
+		private static Task ExecuteInvocationAsync(T target, IInvocation invocation) =>
+			(Task) ExecuteInvocation(target, invocation);
 
 		private static bool IsAnyTask(Type type) => typeof(Task).IsAssignableFrom(type);
 		private static bool IsJustTask(Type type) => type == typeof(Task);

@@ -8,8 +8,8 @@ namespace K4os.Async.Defcon.Internal
 {
 	internal static class TaskExtensions
 	{
-		private static readonly ConcurrentDictionary<Type, Type> TaskInnerTypes =
-			new ConcurrentDictionary<Type, Type>();
+		private static readonly ConcurrentDictionary<Type, Type> 
+			TaskInnerTypes = new();
 
 		public static Type GetResultType(this Task task) =>
 			TaskInnerTypes.GetOrAdd(task.GetType(), ResolveTaskInnerType);
@@ -20,8 +20,8 @@ namespace K4os.Async.Defcon.Internal
 			return GetResultProperty(type)?.PropertyType;
 		}
 
-		private static readonly ConcurrentDictionary<Type, Func<Task, object>> TaskExtractors =
-			new ConcurrentDictionary<Type, Func<Task, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<Task, object>> 
+			TaskExtractors = new();
 
 		public static async Task<object> AsObject(this Task task)
 		{
@@ -45,7 +45,7 @@ namespace K4os.Async.Defcon.Internal
 
 			// (Task argument) => (object) ((T) argument).Result
 			var argument = Expression.Parameter(typeof(Task));
-			var extractor = property == null
+			var extractor = property is null
 				? NullExpression
 				: Expression.Convert(
 					Expression.Property(Expression.Convert(argument, type), property),
@@ -55,11 +55,9 @@ namespace K4os.Async.Defcon.Internal
 
 		private static void EnsureIsTask(Type type)
 		{
-			if (typeof(Task).IsAssignableFrom(type))
-				return;
+			if (typeof(Task).IsAssignableFrom(type)) return;
 
-			throw new InvalidCastException(
-				$"{type.GetFriendlyName()} is not a Task");
+			throw new InvalidCastException($"{type.GetFriendlyName()} is not a Task");
 		}
 
 		private static PropertyInfo GetResultProperty(Type type) =>
